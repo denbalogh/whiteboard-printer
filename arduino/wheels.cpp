@@ -1,16 +1,5 @@
 #include "wheels.h"
 
-bool isInSpeedLimit(int speed){
-    return speed >= MIN_SPEED && speed <= MAX_SPEED;
-}
-
-void printSpeedError(char direction[], int pin){
-    Serial.print("Exceeded speed limit. ");
-    Serial.print(direction);
-    Serial.print(" on pin number ");
-    Serial.println(pin);
-}
-
 // WHEEL definitions 
 
 void Wheel::setPin(int num){
@@ -26,22 +15,10 @@ void Wheel::stop(){
 }
 
 void Wheel::forward(int speed){
-    if(!isInSpeedLimit(speed)){
-        printSpeedError("Forward", pin);
-        stop();
-        return;
-    }
-    
     servo.write(90 + speed);
 }
 
 void Wheel::backward(int speed){
-    if(!isInSpeedLimit(speed)){
-        printSpeedError("Backward", pin);
-        stop();
-        return;
-    }
-    
     servo.write(90 - speed);
 }
 
@@ -62,22 +39,30 @@ void Wheels::stop(){
     bottom.stop();
 }
 
-void Wheels::goLeft(int speed){
+Wheel Wheels::getTopWheel(){
+    return top;
+}
+
+Wheel Wheels::getBottomWheel(){
+    return bottom;
+}
+
+void Wheels::goLeft(int speed, int angle){
     top.forward(speed);
     bottom.backward(speed);
 }
 
-void Wheels::goRight(int speed){
+void Wheels::goRight(int speed, int angle){
     top.backward(speed);
     bottom.forward(speed);
 }
 
-void Wheels::turnLeft(int speed){
-    top.forward(speed);
-    bottom.forward(speed);
-}
-
-void Wheels::turnRight(int speed){
+void Wheels::rotateCounterClockwise(int speed){
     top.backward(speed);
     bottom.backward(speed);
+}
+
+void Wheels::rotateClockwise(int speed){
+    top.forward(speed);
+    bottom.forward(speed);
 }

@@ -4,12 +4,6 @@
 #include <Servo.h>
 #include <Arduino.h>
 
-#define MIN_SPEED 0
-#define MAX_SPEED 90
-
-bool isInSpeedLimit(int speed);
-void printSpeedError(char direction[], int pin);
-
 class Wheel {
     private:
         int pin;
@@ -32,10 +26,12 @@ class Wheels {
         Wheels(int topPin, int bottomPin);
         void init();
         void stop();
-        void goLeft(int speed);
-        void goRight(int speed);
-        void turnLeft(int speed);
-        void turnRight(int speed);
+        Wheel getTopWheel();
+        Wheel getBottomWheel();
+        void goLeft(int speed, int angle);
+        void goRight(int speed, int angle);
+        void rotateClockwise(int speed);
+        void rotateCounterClockwise(int speed);
 };
 
 #endif
