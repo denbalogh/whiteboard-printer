@@ -20,6 +20,14 @@ void Controller::init(void) {
     bt->init();
 }
 
+void Controller::setRotationSpeed(int speed) {
+    this->rotation_speed = speed;
+}
+
+void Controller::setMovingSpeed(int speed) {
+    this->moving_speed = speed;
+}
+
 void Controller::listenForCommands(void) {
     if(bt->hasReceivedData()){
         String data = bt->readString();
@@ -42,7 +50,7 @@ void Controller::controlRGBLed(String commandValue) {
     }
 }
 
-bool Controller::rotateToAngle(double targetAngle, int precision, int speed_decay) {
+bool Controller::rotateToAngle(double targetAngle, int precision, int speed_decay, bool *newCommandReceived) {
     bool clockwise;
     double currentAngle = acc->getAngle();
     double angularDistance = calculateAngularDistance(targetAngle, currentAngle, &clockwise);
@@ -58,20 +66,20 @@ bool Controller::rotateToAngle(double targetAngle, int precision, int speed_deca
     }
 
     for(int i = 0; i < 1000; i++){
+        if(bt->hasReceivedData()){
+            *newCommandReceived = true;
+            wheels->stop();
+            return true;
+        }
+
         currentAngle = acc->getAngle();
         angularDistance = calculateAngularDistance(targetAngle, currentAngle, &clockwise);
 
         if(angularDistance < precision){
             break;
         }    
-        
+
         delay(10);  
-    }
-    
-    while(angularDistance > precision){
-        currentAngle = acc->getAngle();
-        angularDistance = calculateAngularDistance(targetAngle, currentAngle, &clockwise);
-        delay(10);
     }
 
     wheels->stop();
@@ -80,9 +88,12 @@ bool Controller::rotateToAngle(double targetAngle, int precision, int speed_deca
 
 void Controller::controlRotation(double targetAngle) {
     int precision = MAX_ROTATION_PRECISION;
+    bool newCommandReceived = false;
 
     for(int decay = 0; decay < rotation_speed; decay += 3){
-        if(rotateToAngle(targetAngle, precision, decay) && precision == MIN_ROTATION_PRECISION){
+        bool isRotated = rotateToAngle(targetAngle, precision, decay, &newCommandReceived);
+
+        if(newCommandReceived || (isRotated && precision == MIN_ROTATION_PRECISION)){
             break;
         }
 
@@ -94,12 +105,9 @@ void Controller::controlRotation(double targetAngle) {
     }
 }
 
-void Controller::setRotationSpeed(int speed) {
-    this->rotation_speed = speed;
-}
-
-void Controller::setMovingSpeed(int speed) {
-    this->moving_speed = speed;
+void Controller::controlMovement(double angle) {
+    // TODO
+    Serial.println("controlMovement");
 }
 
 void Controller::parseCommand(String command) {
@@ -140,9 +148,26 @@ void Controller::parseCommand(String command) {
     }
 
     if(commandName == "ROTATE"){
+        if(commandValue == "STOP"){
+            wheels->stop();
+            return;
+        }
+
         int angle = commandValue.toInt();
         rgb_led->turnOn(0, 255, 0);
         controlRotation(angle);
+        rgb_led->turnOff();
+    }
+
+    if(commandName == "MOVE"){
+        if(commandValue == "STOP"){
+            wheels->stop();
+            return;
+        }
+
+        int angle = commandValue.toInt();
+        rgb_led->turnOn(0, 255, 0);
+        controlMovement(angle);
         rgb_led->turnOff();
     }
 }

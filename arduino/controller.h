@@ -27,13 +27,14 @@ class Controller {
     public:
         Controller(Wheels *wheels_p, Acceleration *acc_p, Distance *dist_left_p, Distance *dist_bottom_p, RGBLed *rgb_led_p, Bluetooth *bt_p);
         void init(void);
+        void setRotationSpeed(int speed);
+        void setMovingSpeed(int speed);
         void listenForCommands(void);
         void parseCommand(String command);
         void controlRGBLed(String commandValue);
+        bool rotateToAngle(double angle, int precision, int speed_decay, bool *newCommandReceived);
         void controlRotation(double angle);
-        bool rotateToAngle(double angle, int precision, int speed_decay);
-        void setRotationSpeed(int speed);
-        void setMovingSpeed(int speed);
+        void controlMovement(double angle);
 };
 
 #endif
