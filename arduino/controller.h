@@ -34,7 +34,7 @@ class Controller {
         void parseCommand(String command);
         void controlRGBLed(String commandValue);
         bool rotateToAngle(float angle, int precision, int speed_decay, bool *newCommandReceived);
-        void controlRotation(float angle);
+        void controlRotation(float angle, bool withDecay);
         void controlMovement(float angle);
 };
 

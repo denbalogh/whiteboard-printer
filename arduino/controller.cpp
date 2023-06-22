@@ -64,14 +64,14 @@ bool Controller::rotateToAngle(float targetAngle, int precision, int speed_decay
     return false;
 }
 
-void Controller::controlRotation(float targetAngle) {
+void Controller::controlRotation(float targetAngle, bool withDecay) {
     int precision = MAX_ROTATION_PRECISION;
     bool newCommandReceived = false;
 
     for(int decay = 0; decay < rotation_speed; decay += 3){
         bool isRotated = rotateToAngle(targetAngle, precision, decay, &newCommandReceived);
 
-        if(newCommandReceived || (isRotated && precision == MIN_ROTATION_PRECISION)){
+        if(newCommandReceived || !withDecay || (isRotated && precision == MIN_ROTATION_PRECISION)){
             break;
         }
 
@@ -84,7 +84,7 @@ void Controller::controlRotation(float targetAngle) {
 }
 
 void Controller::controlMovement(float targetAngle) {
-    controlRotation(targetAngle);
+    controlRotation(targetAngle, false);
 
     bool clockwise;
     float currentAngle, angularDistance;
@@ -171,7 +171,7 @@ void Controller::parseCommand(String command) {
 
         int angle = commandValue.toInt();
         rgb_led->turnOn(0, 255, 0);
-        controlRotation(angle);
+        controlRotation(angle, true);
         rgb_led->turnOff();
     }
 
