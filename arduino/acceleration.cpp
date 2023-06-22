@@ -2,7 +2,7 @@
 
 void Acceleration::init(void) { 
     if (!mpu.begin()) {
-    Serial.println("Acceleration sensor init failed");
+    Serial.println(F("Acceleration sensor init failed"));
     while (1)
         yield();
     }
@@ -13,10 +13,10 @@ void Acceleration::init(void) {
 }
 
 
-double Acceleration::getAngle(void){
+float Acceleration::getAngle(void){
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    double angle = atan2(a.acceleration.y, a.acceleration.z) * 180 / PI; // Range -180 to 180
+    float angle = atan2(a.acceleration.y, a.acceleration.z) * 180 / PI; // Range -180 to 180
     return (angle < 0) ? angle + 360 : angle; // Range 0 to 360
 }

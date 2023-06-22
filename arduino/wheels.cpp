@@ -14,12 +14,19 @@ void Wheel::stop(){
     servo.write(90);
 }
 
+int Wheel::checkSpeed(int speed){
+    int checkedSpeed = max(speed, 0); // speed can't be negative
+    return min(checkedSpeed, 90); // speed can't be greater than 90
+}
+
 void Wheel::forward(int speed){
-    servo.write(90 + speed);
+    int finalSpeed = checkSpeed(speed);
+    servo.write(90 + finalSpeed);
 }
 
 void Wheel::backward(int speed){
-    servo.write(90 - speed);
+    int finalSpeed = checkSpeed(speed);
+    servo.write(90 - finalSpeed);
 }
 
 // WHEELS definitions 
@@ -47,14 +54,14 @@ Wheel Wheels::getBottomWheel(){
     return bottom;
 }
 
-void Wheels::goLeft(int speed, int angle){
-    top.forward(speed);
-    bottom.backward(speed);
+void Wheels::moveForward(int speed, int offset_top, int offset_bottom){
+    top.forward(speed + offset_top);
+    bottom.backward(speed + offset_bottom);
 }
 
-void Wheels::goRight(int speed, int angle){
-    top.backward(speed);
-    bottom.forward(speed);
+void Wheels::moveBackward(int speed, int offset_top, int offset_bottom){
+    top.backward(speed + offset_top);
+    bottom.forward(speed + offset_bottom);
 }
 
 void Wheels::rotateCounterClockwise(int speed){

@@ -9,7 +9,7 @@ class Acceleration {
 
     public:
         void init(void);
-        double getAngle(void);
+        float getAngle(void);
 };
 
 #endif

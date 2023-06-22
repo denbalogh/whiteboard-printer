@@ -2,12 +2,13 @@
 #define _WHEELS_H_
 
 #include <Servo.h>
-#include <Arduino.h>
+#include <Arduino.h> // for max and min
 
 class Wheel {
     private:
         int pin;
         Servo servo;
+        int checkSpeed(int speed);
 
     public:
         void setPin(int num);
@@ -28,8 +29,8 @@ class Wheels {
         void stop();
         Wheel getTopWheel();
         Wheel getBottomWheel();
-        void goLeft(int speed, int angle);
-        void goRight(int speed, int angle);
+        void moveForward(int speed, int offset_top, int offset_bottom);
+        void moveBackward(int speed, int offset_top, int offset_bottom);
         void rotateClockwise(int speed);
         void rotateCounterClockwise(int speed);
 };

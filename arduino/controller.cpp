@@ -11,6 +11,7 @@ Controller::Controller(Wheels *wheels_p, Acceleration *acc_p, Distance *dist_lef
 
     rotation_speed = BASE_ROTATION_SPEED;
     moving_speed = BASE_MOVING_SPEED;
+    moving_offset_bound = MOVING_OFFSET_BOUND;
 }
 
 void Controller::init(void) {
@@ -20,14 +21,6 @@ void Controller::init(void) {
     bt->init();
 }
 
-void Controller::setRotationSpeed(int speed) {
-    this->rotation_speed = speed;
-}
-
-void Controller::setMovingSpeed(int speed) {
-    this->moving_speed = speed;
-}
-
 void Controller::listenForCommands(void) {
     if(bt->hasReceivedData()){
         String data = bt->readString();
@@ -35,25 +28,10 @@ void Controller::listenForCommands(void) {
     }
 }
 
-void Controller::controlRGBLed(String commandValue) {
-    if(commandValue == "R"){
-        rgb_led->turnOn(255, 0, 0);
-    }
-    if(commandValue == "G"){
-        rgb_led->turnOn(0, 255, 0);
-    }
-    if(commandValue == "B"){
-        rgb_led->turnOn(0, 0, 255);
-    }
-    if(commandValue == "OFF"){
-        rgb_led->turnOff();
-    }
-}
-
-bool Controller::rotateToAngle(double targetAngle, int precision, int speed_decay, bool *newCommandReceived) {
+bool Controller::rotateToAngle(float targetAngle, int precision, int speed_decay, bool *newCommandReceived) {
     bool clockwise;
-    double currentAngle = acc->getAngle();
-    double angularDistance = calculateAngularDistance(targetAngle, currentAngle, &clockwise);
+    float currentAngle = acc->getAngle();
+    float angularDistance = calculateAngularDistance(targetAngle, currentAngle, &clockwise);
 
     if(angularDistance < precision){
         return true;
@@ -86,7 +64,7 @@ bool Controller::rotateToAngle(double targetAngle, int precision, int speed_deca
     return false;
 }
 
-void Controller::controlRotation(double targetAngle) {
+void Controller::controlRotation(float targetAngle) {
     int precision = MAX_ROTATION_PRECISION;
     bool newCommandReceived = false;
 
@@ -105,9 +83,43 @@ void Controller::controlRotation(double targetAngle) {
     }
 }
 
-void Controller::controlMovement(double angle) {
-    // TODO
-    Serial.println("controlMovement");
+void Controller::controlMovement(float targetAngle) {
+    controlRotation(targetAngle);
+
+    bool clockwise;
+    float currentAngle, angularDistance;
+
+    int offset_top = 0;
+    int offset_bottom = 0;
+
+    while(true){
+        if(bt->hasReceivedData()){
+            wheels->stop();
+            break;
+        }
+
+        wheels->moveForward(moving_speed, offset_top, offset_bottom);
+        
+        currentAngle = acc->getAngle();
+        angularDistance = calculateAngularDistance(targetAngle, currentAngle, &clockwise);
+        if(offset_top > moving_offset_bound || offset_bottom > moving_offset_bound){
+            offset_top = 0;
+            offset_bottom = 0;
+        }
+
+        if(angularDistance > MOVING_PRECISION){
+            if(clockwise){
+                offset_top++;
+            } else {
+                offset_bottom++;
+            }
+        } else{
+            offset_top = 0;
+            offset_bottom = 0;
+        }
+
+        delay(10);
+    }
 }
 
 void Controller::parseCommand(String command) {
@@ -118,15 +130,11 @@ void Controller::parseCommand(String command) {
     String commandName = command.substring(0, sepIndex);
     String commandValue = command.substring(sepIndex + 1, command.length() - 1); // -1 to remove the \n character
 
-    if(commandName == "LED"){
-        controlRGBLed(commandValue);
-    }
-
     if(commandName == "SPEED"){
         int speed = commandValue.toInt();
         rgb_led->turnOn(0, 0, 255);
-        setRotationSpeed(speed);
-        setMovingSpeed(speed);
+        rotation_speed = speed;
+        moving_speed = speed;
         delay(1000);
         rgb_led->turnOff();
     }
@@ -134,7 +142,7 @@ void Controller::parseCommand(String command) {
     if(commandName == "ROT_SPEED"){
         int speed = commandValue.toInt();
         rgb_led->turnOn(0, 0, 255);
-        setRotationSpeed(speed);
+        rotation_speed = speed;
         delay(1000);
         rgb_led->turnOff();
     }
@@ -142,7 +150,15 @@ void Controller::parseCommand(String command) {
     if(commandName == "MOV_SPEED"){
         int speed = commandValue.toInt();
         rgb_led->turnOn(0, 0, 255);
-        setMovingSpeed(speed);
+        moving_speed = speed;
+        delay(1000);
+        rgb_led->turnOff();
+    }
+
+    if(commandName == "MOV_OFFSET"){
+        int offset = commandValue.toInt();
+        rgb_led->turnOn(0, 0, 255);
+        moving_offset_bound = offset;
         delay(1000);
         rgb_led->turnOff();
     }

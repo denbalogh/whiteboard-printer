@@ -2,9 +2,9 @@
 
 #include <Arduino.h>
 
-double calculateAngularDistance(double targetAngle, double currentAngle, bool *clockwise){
-    double clockwiseDistance = 0;
-    double counterclockwiseDistance = 0;
+float calculateAngularDistance(float targetAngle, float currentAngle, bool *clockwise){
+    float clockwiseDistance = 0;
+    float counterclockwiseDistance = 0;
 
     if (targetAngle > currentAngle) {
       clockwiseDistance = targetAngle - currentAngle;
