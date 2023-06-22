@@ -3,11 +3,16 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import PrintScreen from '../Print';
 import ControlScreen from '../Control';
-import {Box} from 'native-base';
+import {Box, useTheme} from 'native-base';
+
+import useBluetoothContext from '../../contexts/bluetoothContext';
 
 const Tab = createBottomTabNavigator();
 
 function HomeScreen() {
+  const {isConnected} = useBluetoothContext();
+  const {colors} = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({navigation, route}) => ({
@@ -34,6 +39,12 @@ function HomeScreen() {
             />
           </Box>
         ),
+        headerStyle: isConnected && {
+          backgroundColor: colors.blue[600],
+        },
+        headerTitleStyle: isConnected && {
+          color: colors.white,
+        },
       })}>
       <Tab.Screen name="Print" component={PrintScreen} />
       <Tab.Screen name="Control" component={ControlScreen} />

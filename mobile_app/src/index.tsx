@@ -6,26 +6,30 @@ import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from './screens/Home';
 import BluetoothSetupScreen from './screens/BluetoothSetup';
 
+import {BluetoothContextProvider} from './contexts/bluetoothContext';
+
 const Stack = createNativeStackNavigator();
 
 function App() {
   return (
-    <NativeBaseProvider>
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{headerShown: false}}
-          />
-          <Stack.Screen
-            name="BluetoothSetup"
-            component={BluetoothSetupScreen}
-            options={{title: 'Bluetooth Setup'}}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </NativeBaseProvider>
+    <BluetoothContextProvider>
+      <NativeBaseProvider>
+        <NavigationContainer>
+          <Stack.Navigator>
+            <Stack.Screen
+              name="Home"
+              component={HomeScreen}
+              options={{headerShown: false}}
+            />
+            <Stack.Screen
+              name="BluetoothSetup"
+              component={BluetoothSetupScreen}
+              options={{title: 'Bluetooth Setup'}}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </NativeBaseProvider>
+    </BluetoothContextProvider>
   );
 }
 
