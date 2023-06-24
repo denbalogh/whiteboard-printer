@@ -1,4 +1,10 @@
-import React, {useState, createContext, ReactNode, useContext} from 'react';
+import React, {
+  useState,
+  useEffect,
+  createContext,
+  ReactNode,
+  useContext,
+} from 'react';
 import {PermissionsAndroid} from 'react-native';
 import RNBluetoothClassic, {
   BluetoothDevice,
@@ -14,6 +20,8 @@ const requestPermissions = async () => {
 };
 
 type BluetoothContextType = {
+  isBluetoothEnabled: boolean;
+  enableBluetooth: () => void;
   isScanning: boolean;
   startScan: () => void;
   stopScan: () => void;
@@ -26,6 +34,8 @@ type BluetoothContextType = {
 };
 
 const BluetoothContext = createContext<BluetoothContextType>({
+  isBluetoothEnabled: false,
+  enableBluetooth: () => {},
   isScanning: false,
   startScan: () => {},
   stopScan: () => {},
@@ -38,11 +48,34 @@ const BluetoothContext = createContext<BluetoothContextType>({
 });
 
 const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
+  const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [device, setDevice] = useState<BluetoothDevice | null>(null);
   const [deviceNotFound, setDeviceNotFound] = useState(false);
+
+  useEffect(() => {
+    const getBluetoothState = async () => {
+      try {
+        const enabled = await RNBluetoothClassic.isBluetoothEnabled();
+        setIsBluetoothEnabled(enabled);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    getBluetoothState();
+  }, []);
+
+  useEffect(() => {
+    const subscription = RNBluetoothClassic.onStateChanged(
+      (event: {enabled: boolean}) => {
+        setIsBluetoothEnabled(event.enabled);
+      },
+    );
+    return () => subscription.remove();
+  }, []);
 
   const startScan = async () => {
     await requestPermissions();
@@ -96,9 +129,19 @@ const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
     }
   };
 
+  const enableBluetooth = async () => {
+    try {
+      await RNBluetoothClassic.requestBluetoothEnabled();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <BluetoothContext.Provider
       value={{
+        isBluetoothEnabled,
+        enableBluetooth,
         isScanning,
         startScan,
         stopScan,

@@ -6,6 +6,8 @@ import {useNavigation} from '@react-navigation/native';
 
 const BluetoothSetupScreen = () => {
   const {
+    isBluetoothEnabled,
+    enableBluetooth,
     startScan,
     stopScan,
     isScanning,
@@ -31,6 +33,17 @@ const BluetoothSetupScreen = () => {
     });
   }, [isConnected, navigation, colors.blue, colors.white]);
 
+  if (!isBluetoothEnabled) {
+    return (
+      <Center flex={1}>
+        <Text fontSize="xl" mb={3}>
+          Bluetooth is disabled
+        </Text>
+        <Button onPress={enableBluetooth}>Enable</Button>
+      </Center>
+    );
+  }
+
   const renderScanButton = () =>
     isScanning ? (
       <Box>
@@ -47,7 +60,7 @@ const BluetoothSetupScreen = () => {
     );
 
   return (
-    <Center width="100%" height="100%">
+    <Center flex={1}>
       {device && (
         <Center mb={20}>
           <Ionicons
