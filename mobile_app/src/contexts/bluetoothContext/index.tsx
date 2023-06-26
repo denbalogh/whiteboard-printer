@@ -10,7 +10,7 @@ import RNBluetoothClassic, {
   BluetoothDevice,
 } from 'react-native-bluetooth-classic';
 
-const requestPermissions = async () => {
+const requestBluetoothPermissions = async () => {
   await PermissionsAndroid.requestMultiple([
     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
     PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
@@ -31,6 +31,7 @@ type BluetoothContextType = {
   disconnect: () => void;
   isConnecting: boolean;
   isConnected: boolean;
+  writeToDevice: (message: string) => void;
 };
 
 const BluetoothContext = createContext<BluetoothContextType>({
@@ -45,6 +46,7 @@ const BluetoothContext = createContext<BluetoothContextType>({
   disconnect: () => {},
   isConnecting: false,
   isConnected: false,
+  writeToDevice: () => {},
 });
 
 const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
@@ -78,7 +80,7 @@ const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
   }, []);
 
   const startScan = async () => {
-    await requestPermissions();
+    await requestBluetoothPermissions();
     setIsScanning(true);
     setDevice(null);
 
@@ -137,6 +139,14 @@ const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
     }
   };
 
+  const writeToDevice = async (message: string) => {
+    try {
+      await device?.write(`${message}\n`);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <BluetoothContext.Provider
       value={{
@@ -151,6 +161,7 @@ const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
         disconnect,
         isConnecting,
         isConnected,
+        writeToDevice,
       }}>
       {children}
     </BluetoothContext.Provider>

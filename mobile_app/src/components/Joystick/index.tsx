@@ -4,9 +4,11 @@ import _ from 'lodash';
 
 const Joystick = ({
   onMove,
+  onStop,
   throttleMs = 300,
 }: {
   onMove: ({x, y}: {x: number; y: number}) => void;
+  onStop: () => void;
   throttleMs?: number;
 }) => {
   const throttleFn = _.throttle(onMove, throttleMs);
@@ -25,7 +27,7 @@ const Joystick = ({
         {useNativeDriver: false},
       )(e, gestureState);
 
-      throttleFn({x: gestureState.dx, y: gestureState.dy});
+      throttleFn({x: gestureState.dx, y: -1 * gestureState.dy});
     },
     onPanResponderRelease: () => {
       Animated.spring(
@@ -34,7 +36,7 @@ const Joystick = ({
       ).start();
 
       throttleFn.cancel();
-      onMove({x: 0, y: 0});
+      onStop();
     },
   });
 
