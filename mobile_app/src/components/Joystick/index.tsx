@@ -1,5 +1,11 @@
 import React, {useRef} from 'react';
-import {Animated, PanResponder, StyleSheet, View} from 'react-native';
+import {
+  Animated,
+  PanResponder,
+  StyleSheet,
+  View,
+  Vibration,
+} from 'react-native';
 import _ from 'lodash';
 
 const Joystick = ({
@@ -11,7 +17,17 @@ const Joystick = ({
   onStop: () => void;
   throttleMs?: number;
 }) => {
-  const throttleFn = _.throttle(onMove, throttleMs);
+  const fn = (coords: {x: number; y: number}) => {
+    onMove(coords);
+
+    const x_abs = Math.abs(coords.x);
+    const y_abs = Math.abs(coords.y);
+
+    if (x_abs > 50 || y_abs > 50) {
+      Vibration.vibrate(50);
+    }
+  };
+  const throttleFn = _.throttle(fn, throttleMs);
   const pan = useRef(new Animated.ValueXY()).current;
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,

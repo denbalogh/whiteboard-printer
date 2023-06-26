@@ -1,5 +1,5 @@
 import React from 'react';
-import {Center} from 'native-base';
+import {Flex} from 'native-base';
 import Joystick from '../../components/Joystick';
 import useBluetoothContext from '../../contexts/bluetoothContext';
 import NotConnedtedToDevice from '../../components/NotConnectedToDevice';
@@ -31,9 +31,14 @@ const ControlScreen = () => {
   };
 
   return (
-    <Center flex={1}>
+    <Flex
+      flex={1}
+      justifyContent="flex-end"
+      flexDirection="column"
+      alignItems="center"
+      pb={20}>
       <Joystick onMove={onMove} onStop={onStop} />
-    </Center>
+    </Flex>
   );
 };
 

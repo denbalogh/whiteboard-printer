@@ -3,6 +3,7 @@ import {Center, Box, Button, Text, Spinner, useTheme} from 'native-base';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import useBluetoothContext from '../../contexts/bluetoothContext';
 import {useNavigation} from '@react-navigation/native';
+import {StatusBar} from 'react-native';
 
 const BluetoothSetupScreen = () => {
   const {
@@ -31,6 +32,14 @@ const BluetoothSetupScreen = () => {
       },
       headerTintColor: isConnected ? colors.white : undefined,
     });
+
+    if (isConnected) {
+      StatusBar.setBackgroundColor(colors.blue[600]);
+      StatusBar.setBarStyle('light-content');
+    } else {
+      StatusBar.setBackgroundColor(colors.white);
+      StatusBar.setBarStyle('dark-content');
+    }
   }, [isConnected, navigation, colors.blue, colors.white]);
 
   if (!isBluetoothEnabled) {
