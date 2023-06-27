@@ -23,7 +23,7 @@ const Joystick = ({
     const x_abs = Math.abs(coords.x);
     const y_abs = Math.abs(coords.y);
 
-    if (x_abs > 50 || y_abs > 50) {
+    if (x_abs > 100 || y_abs > 100) {
       Vibration.vibrate(50);
     }
   };
