@@ -32,6 +32,7 @@ type BluetoothContextType = {
   isConnecting: boolean;
   isConnected: boolean;
   writeToDevice: (message: string) => void;
+  readFromDevice: () => Promise<String | undefined>;
 };
 
 const BluetoothContext = createContext<BluetoothContextType>({
@@ -47,6 +48,7 @@ const BluetoothContext = createContext<BluetoothContextType>({
   isConnecting: false,
   isConnected: false,
   writeToDevice: () => {},
+  readFromDevice: () => Promise.resolve(''),
 });
 
 const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
@@ -147,6 +149,15 @@ const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
     }
   };
 
+  const readFromDevice = async () => {
+    try {
+      const message = await device?.read();
+      return message;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <BluetoothContext.Provider
       value={{
@@ -162,6 +173,7 @@ const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
         isConnecting,
         isConnected,
         writeToDevice,
+        readFromDevice,
       }}>
       {children}
     </BluetoothContext.Provider>
