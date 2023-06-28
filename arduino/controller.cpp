@@ -169,4 +169,17 @@ void Controller::parseCommand(String command) {
             lift->down();
         }
     }
+
+    if(commandName == "IS_IMAGE_VALID"){
+        bool isValid = isImageCodeValid(commandValue);
+        if(isValid){
+            rgb_led->turnGreen();
+            bt->writeString("IMAGE_VALID");
+        } else {
+            rgb_led->turnRed();
+            bt->writeString("IMAGE_INVALID");
+        }
+        delay(1000);
+        rgb_led->turnOff();
+    }
 }

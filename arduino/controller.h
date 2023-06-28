@@ -26,7 +26,6 @@ class Controller {
         Lift *lift;
         int rotation_speed;
         int moving_speed;
-        int moving_offset_bound;
     
     public:
         Controller(Wheels *wheels_p, Acceleration *acc_p, Distance *dist_left_p, Distance *dist_bottom_p, RGBLed *rgb_led_p, Bluetooth *bt_p, Lift *lift_ps);
