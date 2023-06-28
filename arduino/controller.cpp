@@ -123,7 +123,7 @@ void Controller::reportDistance(void) {
     float distance_left = dist_left->measure();
     float distance_bottom = dist_bottom->measure();
 
-    String message = "LEFT:" + String(distance_left) + ",BOTTOM:" + String(distance_bottom);
+    String message = String(distance_left) + "," + String(distance_bottom);
     bt->writeString(message);
 }
 
