@@ -12,6 +12,7 @@ class Bluetooth {
         void init(void);
         bool hasReceivedData(void);
         String readString(void);
+        void writeString(String str);
 };
 
 #endif

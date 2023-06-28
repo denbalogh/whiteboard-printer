@@ -1,17 +1,17 @@
 #include "controller.h"
 #include "utils.h"
 
-Controller::Controller(Wheels *wheels_p, Acceleration *acc_p, Distance *dist_left_p, Distance *dist_bottom_p, RGBLed *rgb_led_p, Bluetooth *bt_p) {
+Controller::Controller(Wheels *wheels_p, Acceleration *acc_p, Distance *dist_left_p, Distance *dist_bottom_p, RGBLed *rgb_led_p, Bluetooth *bt_p, Lift *lift_p) {
     wheels = wheels_p;
     acc = acc_p;
     dist_left = dist_left_p;
     dist_bottom = dist_bottom_p;
     rgb_led = rgb_led_p;
     bt = bt_p;
+    lift = lift_p;
 
     rotation_speed = BASE_ROTATION_SPEED;
     moving_speed = BASE_MOVING_SPEED;
-    moving_offset_bound = MOVING_OFFSET_BOUND;
 }
 
 void Controller::init(void) {
@@ -19,6 +19,7 @@ void Controller::init(void) {
     acc->init();
     rgb_led->init();
     bt->init();
+    lift->init();
 }
 
 void Controller::listenForCommands(void) {
@@ -102,10 +103,6 @@ void Controller::controlMovement(float targetAngle) {
         
         currentAngle = acc->getAngle();
         angularDistance = calculateAngularDistance(targetAngle, currentAngle, &clockwise);
-        if(offset_top > moving_offset_bound || offset_bottom > moving_offset_bound){
-            offset_top = 0;
-            offset_bottom = 0;
-        }
 
         if(angularDistance > MOVING_PRECISION){
             if(clockwise){
@@ -122,68 +119,54 @@ void Controller::controlMovement(float targetAngle) {
     }
 }
 
+void Controller::reportDistance(void) {
+    float distance_left = dist_left->measure();
+    float distance_bottom = dist_bottom->measure();
+
+    String message = "LEFT:" + String(distance_left) + ",BOTTOM:" + String(distance_bottom);
+    bt->writeString(message);
+}
+
 void Controller::parseCommand(String command) {
+    command = command.substring(0, command.length() - 1); // remove the \n character
+
+    // Commands without values in format COMMAND
+    if(command == "GET_DISTANCE"){
+        reportDistance();
+    }
+    
+    if(command == "STOP"){
+        wheels->stop();
+    }
+
+    // Commands with values in format COMMAND:VALUE
     int sepIndex = command.indexOf(':');
     if(sepIndex == -1)
         return;
 
     String commandName = command.substring(0, sepIndex);
-    String commandValue = command.substring(sepIndex + 1, command.length() - 1); // -1 to remove the \n character
-
-    if(commandName == "SPEED"){
-        int speed = commandValue.toInt();
-        rgb_led->turnOn(0, 0, 255);
-        rotation_speed = speed;
-        moving_speed = speed;
-        delay(1000);
-        rgb_led->turnOff();
-    }
-
-    if(commandName == "ROT_SPEED"){
-        int speed = commandValue.toInt();
-        rgb_led->turnOn(0, 0, 255);
-        rotation_speed = speed;
-        delay(1000);
-        rgb_led->turnOff();
-    }
-
-    if(commandName == "MOV_SPEED"){
-        int speed = commandValue.toInt();
-        rgb_led->turnOn(0, 0, 255);
-        moving_speed = speed;
-        delay(1000);
-        rgb_led->turnOff();
-    }
-
-    if(commandName == "MOV_OFFSET"){
-        int offset = commandValue.toInt();
-        rgb_led->turnOn(0, 0, 255);
-        moving_offset_bound = offset;
-        delay(1000);
-        rgb_led->turnOff();
-    }
+    String commandValue = command.substring(sepIndex + 1);
 
     if(commandName == "ROTATE"){
-        if(commandValue == "STOP"){
-            wheels->stop();
-            return;
-        }
-
+        rgb_led->turnCyan();
         int angle = commandValue.toInt();
-        rgb_led->turnOn(0, 255, 0);
         controlRotation(angle, true);
         rgb_led->turnOff();
     }
 
     if(commandName == "MOVE"){
-        if(commandValue == "STOP"){
-            wheels->stop();
-            return;
-        }
-
+        rgb_led->turnGreen();
         int angle = commandValue.toInt();
-        rgb_led->turnOn(0, 255, 0);
         controlMovement(angle);
         rgb_led->turnOff();
+    }
+
+    if(commandName == "LIFT"){
+        if(commandValue == "UP"){
+            lift->up();
+        }
+        if(commandValue == "DOWN"){
+            lift->down();
+        }
     }
 }

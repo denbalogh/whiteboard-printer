@@ -13,6 +13,12 @@ bool Bluetooth::hasReceivedData(void){
 String Bluetooth::readString(void){
     char c;
     String str = "";
+
+    // Check for initial data to prevent infinite loop
+    if(!hasReceivedData()){
+        return "";
+    }
+
     while(true){
         if(!hasReceivedData()){
             continue;
@@ -26,4 +32,8 @@ String Bluetooth::readString(void){
         }
     }
     return str;
+}
+
+void Bluetooth::writeString(String str){
+    bt.print(str + "\n");
 }

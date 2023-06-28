@@ -18,6 +18,34 @@ void RGBLed::turnOn(int r, int g, int b){
     analogWrite(b_pin, b);
 }
 
+void RGBLed::turnGreen(void){
+    turnOn(0, 255, 0);
+}
+
+void RGBLed::turnRed(void){
+    turnOn(255, 0, 0);
+}
+
+void RGBLed::turnBlue(void){
+    turnOn(0, 0, 255);
+}
+
+void RGBLed::turnMagenta(void){
+    turnOn(255, 0, 255);
+}
+
+void RGBLed::turnYellow(void){
+    turnOn(255, 255, 0);
+}
+
+void RGBLed::turnCyan(void){
+    turnOn(0, 255, 255);
+}
+
+void RGBLed::turnWhite(void){
+    turnOn(255, 255, 255);
+}
+
 void RGBLed::turnOff(void){
     turnOn(0, 0, 0);
 }

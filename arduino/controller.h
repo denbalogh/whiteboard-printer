@@ -6,6 +6,7 @@
 #include "distance.h"
 #include "rgb_led.h"
 #include "bluetooth.h"
+#include "lift.h"
 
 #define BASE_ROTATION_SPEED 30
 #define MAX_ROTATION_PRECISION 5
@@ -13,7 +14,6 @@
 
 #define BASE_MOVING_SPEED 30
 #define MOVING_PRECISION 1
-#define MOVING_OFFSET_BOUND 10
 
 class Controller {
     private:
@@ -23,12 +23,13 @@ class Controller {
         Distance *dist_bottom;
         RGBLed *rgb_led;
         Bluetooth *bt;
+        Lift *lift;
         int rotation_speed;
         int moving_speed;
         int moving_offset_bound;
     
     public:
-        Controller(Wheels *wheels_p, Acceleration *acc_p, Distance *dist_left_p, Distance *dist_bottom_p, RGBLed *rgb_led_p, Bluetooth *bt_p);
+        Controller(Wheels *wheels_p, Acceleration *acc_p, Distance *dist_left_p, Distance *dist_bottom_p, RGBLed *rgb_led_p, Bluetooth *bt_p, Lift *lift_ps);
         void init(void);
         void listenForCommands(void);
         void parseCommand(String command);
@@ -36,6 +37,7 @@ class Controller {
         bool rotateToAngle(float angle, int precision, int speed_decay, bool *newCommandReceived);
         void controlRotation(float angle, bool withDecay);
         void controlMovement(float angle);
+        void reportDistance(void);
 };
 
 #endif

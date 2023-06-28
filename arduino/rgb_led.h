@@ -12,6 +12,13 @@ class RGBLed {
         void init(void);
         void turnOff(void);
         void turnOn(int r, int g, int b);
+        void turnGreen(void);
+        void turnRed(void);
+        void turnBlue(void);
+        void turnMagenta(void);
+        void turnYellow(void);
+        void turnCyan(void);
+        void turnWhite(void);
 };
 
 #endif
