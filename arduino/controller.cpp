@@ -1,23 +1,16 @@
 #include "controller.h"
 #include "utils.h"
 
-Controller::Controller(Wheels *wheels_p, Acceleration *acc_p, Distance *dist_left_p, Distance *dist_bottom_p, RGBLed *rgb_led_p, Bluetooth *bt_p, Lift *lift_p) {
+Controller::Controller(Wheels *wheels_p, Acceleration *acc_p, Bluetooth *bt_p, Lift *lift_p) {
     wheels = wheels_p;
     acc = acc_p;
-    dist_left = dist_left_p;
-    dist_bottom = dist_bottom_p;
-    rgb_led = rgb_led_p;
     bt = bt_p;
     lift = lift_p;
-
-    rotation_speed = BASE_ROTATION_SPEED;
-    moving_speed = BASE_MOVING_SPEED;
 }
 
 void Controller::init(void) {
     wheels->init();
     acc->init();
-    rgb_led->init();
     bt->init();
     lift->init();
 }
@@ -39,9 +32,9 @@ bool Controller::rotateToAngle(float targetAngle, int precision, int speed_decay
     }
 
     if (clockwise) {
-        wheels->rotateClockwise(rotation_speed - speed_decay);
+        wheels->rotateClockwise(BASE_ROTATION_SPEED - speed_decay);
     } else {
-        wheels->rotateCounterClockwise(rotation_speed - speed_decay);
+        wheels->rotateCounterClockwise(BASE_ROTATION_SPEED - speed_decay);
     }
 
     for(int i = 0; i < 1000; i++){
@@ -69,7 +62,7 @@ void Controller::controlRotation(float targetAngle, bool withDecay) {
     int precision = MAX_ROTATION_PRECISION;
     bool newCommandReceived = false;
 
-    for(int decay = 0; decay < rotation_speed; decay += 3){
+    for(int decay = 0; decay < BASE_ROTATION_SPEED; decay += 1){
         bool isRotated = rotateToAngle(targetAngle, precision, decay, &newCommandReceived);
 
         if(newCommandReceived || !withDecay || (isRotated && precision == MIN_ROTATION_PRECISION)){
@@ -84,14 +77,15 @@ void Controller::controlRotation(float targetAngle, bool withDecay) {
     }
 }
 
-void Controller::controlMovement(float targetAngle) {
+void Controller::controlMovement(float targetAngle, bool forward) {
     controlRotation(targetAngle, false);
 
     bool clockwise;
     float currentAngle, angularDistance;
+    int counter = 0;
 
-    int offset_top = 0;
-    int offset_bottom = 0;
+    int offsetTop = 0;
+    int offsetBottom = 0;
 
     while(true){
         if(bt->hasReceivedData()){
@@ -99,42 +93,133 @@ void Controller::controlMovement(float targetAngle) {
             break;
         }
 
-        wheels->moveForward(moving_speed, offset_top, offset_bottom);
+        if(forward){
+            wheels->moveForward(BASE_MOVING_SPEED, offsetTop, offsetBottom);
+        } else {
+            wheels->moveBackward(BASE_MOVING_SPEED, offsetTop, offsetBottom);
+        }
         
         currentAngle = acc->getAngle();
         angularDistance = calculateAngularDistance(targetAngle, currentAngle, &clockwise);
 
         if(angularDistance > MOVING_PRECISION){
             if(clockwise){
-                offset_top++;
+                forward ? offsetTop++ : offsetBottom++;
             } else {
-                offset_bottom++;
+                forward ? offsetBottom++ : offsetTop++;
             }
         } else{
-            offset_top = 0;
-            offset_bottom = 0;
+            offsetTop = 0;
+            offsetBottom = 0;
+        }
+
+        // Check every +-1 second
+        // If the robot is going straight up, control the rotation
+        if(
+            counter % 100 == 0 && 
+            (
+                (targetAngle == 0 && forward && (currentAngle < (360 - MOVING_UP_ANGLE_THRESHOLD) || currentAngle > MOVING_UP_ANGLE_THRESHOLD)) || 
+                (targetAngle == 180 && !forward && (currentAngle < (180 - MOVING_UP_ANGLE_THRESHOLD) || currentAngle >  180 + MOVING_UP_ANGLE_THRESHOLD))
+            )
+        ){
+            controlRotation(targetAngle, false);
+            offsetTop = 0;
+            offsetBottom = 0;
         }
 
         delay(10);
+        counter++;
     }
 }
 
-void Controller::reportDistance(void) {
-    float distance_left = dist_left->measure();
-    float distance_bottom = dist_bottom->measure();
+void Controller::moveForTimeInMs(bool forward, int timeInMs) {
+        if(forward){
+            wheels->moveForward(BASE_MOVING_SPEED, 0, 0);
+        } else {
+            wheels->moveBackward(BASE_MOVING_SPEED, 0, 0);
+        }
 
-    String message = String(distance_left) + "," + String(distance_bottom);
-    bt->writeString(message);
+        delay(timeInMs);
+        wheels->stop();
 }
+
+void Controller::printPoint(void){
+    lift->down();
+    delay(500);
+    lift->up();
+    delay(500);
+}
+
+void Controller::printSquare(int size){
+    lift->up();
+    delay(500);
+
+    int angleRight = 82; // should be 90 but accelerometer sensor is giving 82
+    int angleBottomRight = 90 + ANGLE_WHEN_MOVING_TO_NEXT_ROW;
+    int angleTopRight = 90 - ANGLE_WHEN_MOVING_TO_NEXT_ROW;
+    int moveTime = PIXEL_DISTANCE_IN_CM * ONE_CM_IN_MS;
+    float moveTimeInAngle = (PIXEL_DISTANCE_IN_CM - 0.63) * ONE_CM_IN_MS; // linear regression from empirical data
+    float moveBackFromAngleTime = 1.50 * moveTimeInAngle + 0.31; // linear regression from empirical data
+    int rows = size;
+    int cols = size;
+
+    for(int i = 1; i <= rows; i++){
+        bool forward = i % 2 != 0;
+
+        for(int j = 0; j < cols - 1; j++){
+            if(bt->hasReceivedData()){
+                wheels->stop();
+                break;
+            }
+
+            controlRotation(angleRight, true);
+            printPoint();
+            moveForTimeInMs(forward, moveTime);
+        }
+
+        controlRotation(angleRight, true);
+        printPoint();
+
+        // move to next row
+        if(i != rows){
+            controlRotation(angleBottomRight, true);
+            moveForTimeInMs(true, moveTimeInAngle);
+            controlRotation(angleRight, true);
+            moveForTimeInMs(false, moveBackFromAngleTime);
+        }
+    }
+}
+
+// void Controller::printSquare(int size){
+//     lift->up();
+//     delay(500);
+
+//     int angleRight = 82; // should be 90 but accelerometer sensor is giving 82
+//     int angleBottomRight = 90 + ANGLE_WHEN_MOVING_TO_NEXT_ROW;
+//     float moveTimeInAngle = ((PIXEL_DISTANCE_IN_CM - 0.63) / 0.77) * ONE_CM_IN_MS;
+//     float moveBackFromAngleTime = 1.15 * moveTimeInAngle + 0.31;
+
+//     for(int i = 1; i <= size; i++){
+//         if(bt->hasReceivedData()){
+//             wheels->stop();
+//             break;
+//         }
+//         controlRotation(angleRight, true);
+//         printPoint();
+//         controlRotation(angleBottomRight, true);
+//         moveForTimeInMs(true, moveTime);
+//         controlRotation(angleRight, true);
+//         moveForTimeInMs(false, moveBackTime);
+//     }
+
+//     controlRotation(angleRight, true);
+//     printPoint();
+// }
 
 void Controller::parseCommand(String command) {
     command = command.substring(0, command.length() - 1); // remove the \n character
 
     // Commands without values in format COMMAND
-    if(command == "GET_DISTANCE"){
-        reportDistance();
-    }
-    
     if(command == "STOP"){
         wheels->stop();
     }
@@ -148,17 +233,13 @@ void Controller::parseCommand(String command) {
     String commandValue = command.substring(sepIndex + 1);
 
     if(commandName == "ROTATE"){
-        rgb_led->turnCyan();
         int angle = commandValue.toInt();
         controlRotation(angle, true);
-        rgb_led->turnOff();
     }
 
     if(commandName == "MOVE"){
-        rgb_led->turnGreen();
         int angle = commandValue.toInt();
-        controlMovement(angle);
-        rgb_led->turnOff();
+        controlMovement(angle, true);
     }
 
     if(commandName == "LIFT"){
@@ -173,13 +254,22 @@ void Controller::parseCommand(String command) {
     if(commandName == "IS_IMAGE_VALID"){
         bool isValid = isImageCodeValid(commandValue);
         if(isValid){
-            rgb_led->turnGreen();
             bt->writeString("IMAGE_VALID");
         } else {
-            rgb_led->turnRed();
             bt->writeString("IMAGE_INVALID");
         }
         delay(1000);
-        rgb_led->turnOff();
+    }
+
+    if(commandName == "PRINT"){
+        // bool isValid = isImageCodeValid(commandValue);
+        // if(isValid){
+        //     rgb_led->turnWhite();
+        //     printImage(commandValue);
+        // } else {
+        //     rgb_led->turnRed();
+        //     delay(1000);
+        // }
+        printSquare(commandValue.toInt());
     }
 }

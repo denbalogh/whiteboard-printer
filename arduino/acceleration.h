@@ -1,5 +1,5 @@
-#ifndef _ACCELERATION_H_
-#define _ACCELERATION_H_
+#ifndef _ANGLE_AND_TEMP_H_
+#define _ANGLE_AND_TEMP_H_
 
 #include <Adafruit_MPU6050.h>
 
@@ -10,6 +10,9 @@ class Acceleration {
     public:
         void init(void);
         float getAngle(void);
+        // float getAccX(void);
+        // float getAccY(void);
+        // float getAccZ(void);
 };
 
 #endif
