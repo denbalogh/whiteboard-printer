@@ -1,10 +1,11 @@
 import {Flex, ScrollView, Button, AlertDialog, useToast} from 'native-base';
 import React, {useState, useRef, useCallback} from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useNavigation} from '@react-navigation/native';
 
 import RowsColsInput from './RowsColsInput';
 import Point, {ButtonSize} from './Point';
+import type {ImageItemType} from '../../../types';
+import useImageCollectionContext from '../../../contexts/ImageCollection';
 
 const ImageBoard = () => {
   const [rows, setRows] = useState(10);
@@ -12,6 +13,8 @@ const ImageBoard = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const toast = useToast();
   const navigation = useNavigation();
+
+  const {saveImage} = useImageCollectionContext();
 
   const handleDialogOpen = () => {
     setIsDialogOpen(true);
@@ -25,26 +28,19 @@ const ImageBoard = () => {
     [...Array(rows * cols).keys()].map(() => false),
   );
 
-  const saveImageToCollection = async () => {
+  const saveImageToCollection = () => {
     const data = {
       rows,
       cols,
       boardState,
     };
 
-    try {
-      const jsonValue = JSON.stringify(data);
-      await AsyncStorage.setItem(`image-${Date.now()}`, jsonValue);
+    saveImage(data, () =>
       toast.show({
         description: 'Image was saved to collection',
         variant: 'solid',
-      });
-    } catch (e) {
-      toast.show({
-        description: 'Error while saving the image',
-        variant: 'subtle',
-      });
-    }
+      }),
+    );
 
     handleDialogClose();
   };
@@ -67,15 +63,20 @@ const ImageBoard = () => {
   const onPointPress = useCallback(
     (r: number, c: number) => {
       setBoardState(prevBoardState => {
-        console.log('CLICK', r, c, rows, cols, getBoardIndex(r, c));
         const newBoardState = [...prevBoardState];
         const index = getBoardIndex(r, c);
         newBoardState[index] = !newBoardState[index];
         return newBoardState;
       });
     },
-    [cols, getBoardIndex, rows],
+    [getBoardIndex],
   );
+
+  const handleLoadImageFromCollection = (item: ImageItemType) => {
+    setRows(item.rows);
+    setCols(item.cols);
+    setBoardState(item.boardState);
+  };
 
   return (
     <Flex flex={1}>
@@ -133,7 +134,12 @@ const ImageBoard = () => {
           <Button
             variant="outline"
             // @ts-ignore
-            onPress={() => navigation.navigate('ImageCollection')}>
+            onPress={() =>
+              // @ts-ignore
+              navigation.navigate('ImageCollection', {
+                load: handleLoadImageFromCollection,
+              })
+            }>
             Open collection
           </Button>
         </Flex>

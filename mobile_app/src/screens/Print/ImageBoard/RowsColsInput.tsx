@@ -1,5 +1,5 @@
 import {Flex, Input, Text} from 'native-base';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 
 const RowsColsInput = ({
   rows,
@@ -12,6 +12,14 @@ const RowsColsInput = ({
 }) => {
   const [editedRows, setEditedRows] = useState<string>(`${rows}`);
   const [editedCols, setEditedCols] = useState<string>(`${cols}`);
+
+  useEffect(() => {
+    setEditedRows(`${rows}`);
+  }, [rows]);
+
+  useEffect(() => {
+    setEditedCols(`${cols}`);
+  }, [cols]);
 
   const handleSubmit = () => {
     const intRows = parseInt(editedRows, 10);

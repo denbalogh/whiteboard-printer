@@ -1,102 +1,36 @@
-import React, {useEffect, useState} from 'react';
-import {Flex, Box, Spinner, ScrollView} from 'native-base';
-// import {useNavigation} from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, {useState, useRef} from 'react';
+import {Flex, Spinner, ScrollView, AlertDialog, Button} from 'native-base';
+import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
+import useImageCollectionContext from '../../contexts/ImageCollection';
+import type {ImageItemType} from '../../types';
 
-const PointSize = 10;
-
-const ImageItem = ({
-  rows,
-  cols,
-  boardState,
-}: {
-  rows: number;
-  cols: number;
-  boardState: boolean[];
-}) => {
-  const getBoardIndex = (row: number, col: number) => {
-    return row * cols + col;
-  };
-
-  return (
-    <Flex flex={1} alignItems="center" backgroundColor="primary.50">
-      <ScrollView horizontal={true} style={{height: rows * PointSize}}>
-        <Flex direction="column">
-          {[...Array(rows).keys()].map(i => (
-            <Flex key={i} direction="row">
-              {[...Array(cols).keys()].map(j => (
-                <Box
-                  key={`${i}-${j}`}
-                  style={{
-                    width: PointSize,
-                    height: PointSize,
-                  }}
-                  backgroundColor={
-                    boardState[getBoardIndex(i, j)]
-                      ? 'primary.900'
-                      : 'primary.100'
-                  }
-                />
-              ))}
-            </Flex>
-          ))}
-        </Flex>
-      </ScrollView>
-    </Flex>
-  );
-};
+import ImageItem from './ImageItem';
 
 const ImageCollectionScreen = () => {
-  //   const navigation = useNavigation();
-  const [isLoading, setIsLoading] = useState(true);
-  const [imageKeys, setImageKeys] = useState<string[]>([]);
-  const [images, setImages] = useState<
-    {
-      rows: number;
-      cols: number;
-      boardState: boolean[];
-    }[]
-  >([]);
+  const navigation = useNavigation();
+  const route =
+    useRoute<
+      RouteProp<
+        {ImageCollection: {load: (image: ImageItemType) => void}},
+        'ImageCollection'
+      >
+    >();
 
-  const getAllKeys = async () => {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      setImageKeys(keys.filter(key => key.includes('image-')));
-    } catch (e) {
-      console.log(e);
-      setIsLoading(false);
-    }
+  const {isLoading, images, deleteImage} = useImageCollectionContext();
+
+  const {load} = route.params;
+
+  const [imageKeyToRemove, setImageKeyToRemove] = useState('');
+
+  const cancelRef = useRef(null);
+
+  const handleDialogOpen = (key: string) => {
+    setImageKeyToRemove(key);
   };
 
-  useEffect(() => {
-    getAllKeys();
-  }, []);
-
-  useEffect(() => {
-    const getAllImages = async () => {
-      try {
-        const values = await AsyncStorage.multiGet(imageKeys);
-        setImages(
-          values
-            // @ts-ignore
-            .sort(
-              // @ts-ignore
-              ([keyA], [keyB]) =>
-                parseInt(keyB.replace('image-', ''), 10) -
-                parseInt(keyA.replace('image-', ''), 10),
-            )
-            // @ts-ignore
-            .map(([_, val]) => JSON.parse(val as string)),
-        );
-        setIsLoading(false);
-      } catch (e) {
-        console.log(e);
-        setIsLoading(false);
-      }
-    };
-
-    getAllImages();
-  }, [imageKeys]);
+  const handleDialogClose = () => {
+    setImageKeyToRemove('');
+  };
 
   if (isLoading) {
     return (
@@ -107,13 +41,53 @@ const ImageCollectionScreen = () => {
   }
 
   return (
-    <ScrollView flex={1}>
-      {images.map((image, index) => (
-        <Flex mt={4} key={index}>
-          <ImageItem {...image} />
-        </Flex>
-      ))}
-    </ScrollView>
+    <Flex flex={1}>
+      <ScrollView flex={1}>
+        {images.map(({data, key}, index) => (
+          <Flex mt={4} key={index}>
+            <ImageItem
+              {...data}
+              onPress={() => {
+                load(data);
+                navigation.goBack();
+              }}
+              onDeletePress={() => handleDialogOpen(key)}
+            />
+          </Flex>
+        ))}
+      </ScrollView>
+      <AlertDialog
+        leastDestructiveRef={cancelRef}
+        isOpen={imageKeyToRemove !== ''}
+        onClose={handleDialogClose}>
+        <AlertDialog.Content>
+          <AlertDialog.CloseButton />
+          <AlertDialog.Header>Remove image from collection</AlertDialog.Header>
+          <AlertDialog.Body>
+            This will permanently remove image from collection.
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <Button.Group space={2}>
+              <Button
+                variant="unstyled"
+                colorScheme="coolGray"
+                onPress={handleDialogClose}
+                ref={cancelRef}>
+                Cancel
+              </Button>
+              <Button
+                colorScheme="danger"
+                onPress={() => {
+                  deleteImage(imageKeyToRemove);
+                  handleDialogClose();
+                }}>
+                Remove
+              </Button>
+            </Button.Group>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
+      </AlertDialog>
+    </Flex>
   );
 };
 

@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import {Center, Box, Button, Text, Spinner, useTheme} from 'native-base';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import useBluetoothContext from '../../contexts/bluetoothContext';
+import useBluetoothContext from '../../contexts/Bluetooth';
 import {useNavigation} from '@react-navigation/native';
 import {StatusBar} from 'react-native';
 

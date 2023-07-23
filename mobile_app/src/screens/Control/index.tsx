@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {Button, Flex, Text, Divider, Switch, useTheme} from 'native-base';
-import useBluetoothContext from '../../contexts/bluetoothContext';
+import useBluetoothContext from '../../contexts/Bluetooth';
 import NotConnedtedToDevice from '../../components/NotConnectedToDevice';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 

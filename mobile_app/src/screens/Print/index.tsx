@@ -1,6 +1,6 @@
 import React from 'react';
 import {ScrollView} from 'native-base';
-import useBluetoothContext from '../../contexts/bluetoothContext';
+import useBluetoothContext from '../../contexts/Bluetooth';
 import NotConnedtedToDevice from '../../components/NotConnectedToDevice';
 import ImageBoard from './ImageBoard';
 

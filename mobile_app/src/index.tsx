@@ -9,7 +9,8 @@ import HomeScreen from './screens/Home';
 import BluetoothSetupScreen from './screens/BluetoothSetup';
 import ImageCollectionScreen from './screens/ImageCollection';
 
-import {BluetoothContextProvider} from './contexts/bluetoothContext';
+import {BluetoothContextProvider} from './contexts/Bluetooth';
+import {ImageCollectionContextProvider} from './contexts/ImageCollection';
 
 StatusBar.setBarStyle('dark-content');
 StatusBar.setBackgroundColor('#ffffff');
@@ -20,29 +21,31 @@ const Stack = createNativeStackNavigator();
 
 function App() {
   return (
-    <BluetoothContextProvider>
-      <NativeBaseProvider>
-        <NavigationContainer>
-          <Stack.Navigator>
-            <Stack.Screen
-              name="Home"
-              component={HomeScreen}
-              options={{headerShown: false}}
-            />
-            <Stack.Screen
-              name="BluetoothSetup"
-              component={BluetoothSetupScreen}
-              options={{title: 'Bluetooth Setup'}}
-            />
-            <Stack.Screen
-              name="ImageCollection"
-              component={ImageCollectionScreen}
-              options={{title: 'Image Collection'}}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </NativeBaseProvider>
-    </BluetoothContextProvider>
+    <ImageCollectionContextProvider>
+      <BluetoothContextProvider>
+        <NativeBaseProvider>
+          <NavigationContainer>
+            <Stack.Navigator>
+              <Stack.Screen
+                name="Home"
+                component={HomeScreen}
+                options={{headerShown: false}}
+              />
+              <Stack.Screen
+                name="BluetoothSetup"
+                component={BluetoothSetupScreen}
+                options={{title: 'Bluetooth Setup'}}
+              />
+              <Stack.Screen
+                name="ImageCollection"
+                component={ImageCollectionScreen}
+                options={{title: 'Image Collection'}}
+              />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </NativeBaseProvider>
+      </BluetoothContextProvider>
+    </ImageCollectionContextProvider>
   );
 }
 

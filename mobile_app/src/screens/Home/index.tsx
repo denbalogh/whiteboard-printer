@@ -5,7 +5,7 @@ import PrintScreen from '../Print';
 import ControlScreen from '../Control';
 import {Box, useTheme} from 'native-base';
 
-import useBluetoothContext from '../../contexts/bluetoothContext';
+import useBluetoothContext from '../../contexts/Bluetooth';
 
 const Tab = createBottomTabNavigator();
 
