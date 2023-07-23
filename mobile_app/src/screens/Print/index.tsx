@@ -1,7 +1,8 @@
 import React from 'react';
-import {Box} from 'native-base';
+import {ScrollView} from 'native-base';
 import useBluetoothContext from '../../contexts/bluetoothContext';
 import NotConnedtedToDevice from '../../components/NotConnectedToDevice';
+import ImageBoard from './ImageBoard';
 
 const PrintScreen = () => {
   const {isConnected} = useBluetoothContext();
@@ -11,9 +12,9 @@ const PrintScreen = () => {
   }
 
   return (
-    <Box py={100} alignSelf="center">
-      Print
-    </Box>
+    <ScrollView flex={1}>
+      <ImageBoard />
+    </ScrollView>
   );
 };
 

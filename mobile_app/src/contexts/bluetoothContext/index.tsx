@@ -55,7 +55,7 @@ const BluetoothContextProvider = ({children}: {children: ReactNode}) => {
   const [isBluetoothEnabled, setIsBluetoothEnabled] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
   const [device, setDevice] = useState<BluetoothDevice | null>(null);
   const [deviceNotFound, setDeviceNotFound] = useState(false);
 

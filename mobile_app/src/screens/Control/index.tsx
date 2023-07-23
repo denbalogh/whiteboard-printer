@@ -1,32 +1,20 @@
 import React, {useState} from 'react';
-import {Button, Flex, Text, Divider, Switch} from 'native-base';
+import {Button, Flex, Text, Divider, Switch, useTheme} from 'native-base';
 import useBluetoothContext from '../../contexts/bluetoothContext';
 import NotConnedtedToDevice from '../../components/NotConnectedToDevice';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const ControlScreen = () => {
-  const {isConnected, writeToDevice, readFromDevice} = useBluetoothContext();
+  const {isConnected, writeToDevice} = useBluetoothContext();
 
   const [isRotationOnly, setIsRotationOnly] = useState(false);
   const [liftPosition, setLiftPosition] = useState<'Up' | 'Down' | null>(null);
-  const [distanceLeft, setDistanceLeft] = useState<number | null>(null);
-  const [distanceBottom, setDistanceBottom] = useState<number | null>(null);
+
+  const {colors} = useTheme();
 
   if (!isConnected) {
     return <NotConnedtedToDevice />;
   }
-
-  const getDistance = async () => {
-    writeToDevice('GET_DISTANCE');
-    setTimeout(async () => {
-      const distance = await readFromDevice();
-      if (distance) {
-        const [left, bottom] = distance.split(',');
-        setDistanceLeft(parseInt(left, 10));
-        setDistanceBottom(parseInt(bottom, 10));
-      }
-    }, 1000);
-  };
 
   const getCommand = (angle: number) => {
     if (isRotationOnly) {
@@ -38,7 +26,7 @@ const ControlScreen = () => {
 
   const commonDirButtonProps = {
     m: 3,
-    backgroundColor: 'green.900',
+    variant: 'solid',
   };
 
   const commonDirIconProps = {
@@ -48,29 +36,6 @@ const ControlScreen = () => {
 
   return (
     <Flex flex={1} flexDirection="column" alignItems="center">
-      {/* DISTANCE BLOCK - BEGIN */}
-      <Flex
-        flexDirection="row"
-        justifyContent="space-between"
-        alignSelf="stretch"
-        p={5}>
-        <Flex>
-          <Flex flexDirection="row" alignSelf="stretch" alignItems="center">
-            <Text>Distance left: </Text>
-            <Text fontSize="lg" fontWeight="bold">
-              {distanceLeft ?? 'unknown'} cm
-            </Text>
-          </Flex>
-          <Flex flexDirection="row" alignItems="center" alignSelf="stretch">
-            <Text>Distance bottom: </Text>
-            <Text fontSize="lg" fontWeight="bold">
-              {distanceBottom ?? 'unknown'} cm
-            </Text>
-          </Flex>
-        </Flex>
-        <Button onPress={getDistance}>Get distance</Button>
-      </Flex>
-      {/* DISTANCE BLOCK - END */}
       <Divider />
       {/* LIFT BLOCK - BEGIN */}
       <Flex
@@ -84,21 +49,31 @@ const ControlScreen = () => {
             writeToDevice('LIFT:UP');
             setLiftPosition('Up');
           }}
-          leftIcon={<Ionicons name="arrow-up" color="white" />}>
+          flex={1}
+          mr={2}
+          variant={liftPosition === 'Up' ? 'solid' : 'outline'}
+          leftIcon={
+            <Ionicons
+              name="arrow-up"
+              color={liftPosition === 'Up' ? 'white' : colors.primary['900']}
+            />
+          }>
           Lift up
         </Button>
-        <Flex flexDirection="row" alignItems="center">
-          <Text>Current: </Text>
-          <Text fontSize="lg" fontWeight="bold">
-            {liftPosition ?? 'unknown'}
-          </Text>
-        </Flex>
         <Button
           onPress={() => {
             writeToDevice('LIFT:DOWN');
             setLiftPosition('Down');
           }}
-          leftIcon={<Ionicons name="arrow-down" color="white" />}>
+          flex={1}
+          ml={2}
+          variant={liftPosition === 'Down' ? 'solid' : 'outline'}
+          leftIcon={
+            <Ionicons
+              name="arrow-down"
+              color={liftPosition === 'Down' ? 'white' : colors.primary['900']}
+            />
+          }>
           Lift Down
         </Button>
       </Flex>
@@ -164,7 +139,7 @@ const ControlScreen = () => {
             />
             <Button
               {...commonDirButtonProps}
-              backgroundColor="red.900"
+              colorScheme={'error'}
               leftIcon={<Ionicons name="stop" {...commonDirIconProps} />}
               onPress={() => writeToDevice('STOP')}
             />
