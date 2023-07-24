@@ -11,13 +11,22 @@ import ImageCollectionScreen from './screens/ImageCollection';
 
 import {BluetoothContextProvider} from './contexts/Bluetooth';
 import {ImageCollectionContextProvider} from './contexts/ImageCollection';
+import type {ImageItemType} from './types';
 
 StatusBar.setBarStyle('dark-content');
 StatusBar.setBackgroundColor('#ffffff');
 
 SystemNavigationBar.setNavigationColor('#ffffff', 'dark');
 
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Home: undefined;
+  BluetoothSetup: undefined;
+  ImageCollection: {load: (image: ImageItemType) => void};
+  Print: undefined;
+  Control: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function App() {
   return (
