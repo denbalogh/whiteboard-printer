@@ -1,6 +1,26 @@
 #include "controller.h"
 #include "utils.h"
 
+void setMoveTimes(float moveTimes[3], int spacing){
+    moveTimes[0] = spacing * ONE_CM_IN_MS;
+
+    float a = 1.0, b = 1.0, c = 1.0, d = 1.0;
+    if(spacing == 1){
+        a = 0.63;
+        b = 0.6;
+        c = 3.0;
+        d = 0.31;
+    }else if(spacing == 2){
+        a = 0.63;
+        b = 1.0;
+        c = 1.50;
+        d = 0.31;
+    }
+
+    moveTimes[1] = ((spacing - a) / b) * ONE_CM_IN_MS;
+    moveTimes[2] = c * moveTimes[1] + d;
+}
+
 Controller::Controller(Wheels *wheels_p, Acceleration *acc_p, Bluetooth *bt_p, Lift *lift_p) {
     wheels = wheels_p;
     acc = acc_p;
@@ -150,16 +170,17 @@ void Controller::printPoint(void){
     delay(500);
 }
 
-void Controller::printSquare(int size){
+void Controller::printSquare(int size, int spacing){
     lift->up();
     delay(500);
 
     int angleRight = 82; // should be 90 but accelerometer sensor is giving 82
     int angleBottomRight = 90 + ANGLE_WHEN_MOVING_TO_NEXT_ROW;
     int angleTopRight = 90 - ANGLE_WHEN_MOVING_TO_NEXT_ROW;
-    int moveTime = PIXEL_DISTANCE_IN_CM * ONE_CM_IN_MS;
-    float moveTimeInAngle = (PIXEL_DISTANCE_IN_CM - 0.63) * ONE_CM_IN_MS; // linear regression from empirical data
-    float moveBackFromAngleTime = 1.50 * moveTimeInAngle + 0.31; // linear regression from empirical data
+
+    float moveTimes[3] = {0.0};
+    setMoveTimes(moveTimes, spacing);
+
     int rows = size;
     int cols = size;
 
@@ -174,7 +195,7 @@ void Controller::printSquare(int size){
 
             controlRotation(angleRight, true);
             printPoint();
-            moveForTimeInMs(forward, moveTime);
+            moveForTimeInMs(forward, moveTimes[0]);
         }
 
         controlRotation(angleRight, true);
@@ -183,9 +204,9 @@ void Controller::printSquare(int size){
         // move to next row
         if(i != rows){
             controlRotation(angleBottomRight, true);
-            moveForTimeInMs(true, moveTimeInAngle);
+            moveForTimeInMs(true, moveTimes[1]);
             controlRotation(angleRight, true);
-            moveForTimeInMs(false, moveBackFromAngleTime);
+            moveForTimeInMs(false, moveTimes[2]);
         }
     }
 }
@@ -262,14 +283,14 @@ void Controller::parseCommand(String command) {
     }
 
     if(commandName == "PRINT"){
-        // bool isValid = isImageCodeValid(commandValue);
-        // if(isValid){
-        //     rgb_led->turnWhite();
-        //     printImage(commandValue);
-        // } else {
-        //     rgb_led->turnRed();
-        //     delay(1000);
-        // }
-        printSquare(commandValue.toInt());
+        // Commands with values in format COMMAND:VALUE
+        int sepIndex = commandValue.indexOf(':');
+        if(sepIndex == -1)
+            return;
+
+        String size = commandValue.substring(0, sepIndex);
+        String spacing = commandValue.substring(sepIndex + 1);
+        
+        printSquare(size.toInt(), spacing.toInt());
     }
 }

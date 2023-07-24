@@ -18,6 +18,8 @@
 #define ONE_CM_IN_MS 300.0 / 1.8 // empirically measured
 #define ANGLE_WHEN_MOVING_TO_NEXT_ROW 30.0
 
+void setMoveTimes(float moveTimes[3], int spacing);
+
 class Controller {
     private:
         Wheels *wheels;
@@ -35,7 +37,7 @@ class Controller {
         void controlMovement(float angle, bool forward);
         void moveForTimeInMs(bool forward, int timeInMs);
         void printPoint(void);
-        void printSquare(int size);
+        void printSquare(int size, int spacing);
 };
 
 #endif
