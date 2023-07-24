@@ -20,6 +20,7 @@ const Point = memo(
             width: ButtonSize,
             height: ButtonSize,
           }}
+          borderRadius={ButtonSize / 2}
           backgroundColor={isFilled ? 'primary.900' : 'primary.100'}
         />
       </TouchableOpacity>

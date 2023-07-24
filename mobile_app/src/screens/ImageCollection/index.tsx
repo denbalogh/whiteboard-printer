@@ -1,5 +1,5 @@
 import React, {useState, useRef} from 'react';
-import {Flex, Spinner, ScrollView, AlertDialog, Button} from 'native-base';
+import {Flex, Spinner, AlertDialog, Button, FlatList} from 'native-base';
 import {useNavigation, useRoute, RouteProp} from '@react-navigation/native';
 import useImageCollectionContext from '../../contexts/ImageCollection';
 import type {ImageItemType} from '../../types';
@@ -42,9 +42,10 @@ const ImageCollectionScreen = () => {
 
   return (
     <Flex flex={1}>
-      <ScrollView flex={1}>
-        {images.map(({data, key}, index) => (
-          <Flex mt={4} key={index}>
+      <FlatList
+        data={images}
+        renderItem={({item: {key, data}, index}) => (
+          <Flex mt={4} mb={index === images.length - 1 ? 4 : 0} key={key}>
             <ImageItem
               {...data}
               onPress={() => {
@@ -54,8 +55,8 @@ const ImageCollectionScreen = () => {
               onDeletePress={() => handleDialogOpen(key)}
             />
           </Flex>
-        ))}
-      </ScrollView>
+        )}
+      />
       <AlertDialog
         leastDestructiveRef={cancelRef}
         isOpen={imageKeyToRemove !== ''}

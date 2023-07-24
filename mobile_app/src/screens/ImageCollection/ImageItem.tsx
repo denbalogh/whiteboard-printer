@@ -31,6 +31,7 @@ const ImageItem = ({rows, cols, boardState, onPress, onDeletePress}: Props) => {
                       width: PointSize,
                       height: PointSize,
                     }}
+                    borderRadius={PointSize / 2}
                     backgroundColor={
                       boardState[getBoardIndex(i, j)]
                         ? 'primary.900'
