@@ -1,8 +1,9 @@
 import useBluetoothContext from '../../contexts/Bluetooth';
 import NotConnedtedToDevice from '../../components/NotConnectedToDevice';
+import type {BluetoothDeviceReadEvent} from 'react-native-bluetooth-classic';
 
 import {Flex, ScrollView, Button, useToast, Fab} from 'native-base';
-import React, {useState, useRef, useCallback} from 'react';
+import React, {useState, useRef, useCallback, useEffect} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import RowsColsInput from './RowsColsInput';
@@ -19,7 +20,7 @@ import PrintDialog from './PrintDialog';
 const PrintScreen = ({
   navigation,
 }: NativeStackScreenProps<RootStackParamList, 'Print'>) => {
-  const {isConnected} = useBluetoothContext();
+  const {isConnected, device} = useBluetoothContext();
 
   const [isSaveToCollectionDialogOpen, setIsSaveToCollectionDialogOpen] =
     useState(false);
@@ -49,6 +50,25 @@ const PrintScreen = ({
   const [boardState, setBoardState] = useState(
     [...Array(rows * cols).keys()].map(() => false),
   );
+
+  useEffect(() => {
+    if (device) {
+      const subscription = device.onDataReceived(
+        async (event: BluetoothDeviceReadEvent) => {
+          const {data} = event;
+
+          if (data.includes('PRINT_STATUS:')) {
+            const status = data.replace('PRINT_STATUS:', '');
+            toast.show({
+              description: status,
+            });
+          }
+        },
+      );
+
+      return () => subscription.remove();
+    }
+  }, [device, toast]);
 
   const saveImageToCollection = () => {
     const data = {
