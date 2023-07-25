@@ -4,7 +4,7 @@ import {AlertDialog, Button, Flex} from 'native-base';
 type Props = {
   isDialogOpen: boolean;
   handleDialogClose: () => void;
-  print: () => void;
+  print: (spacing: string) => void;
   cancelRef: any;
 };
 
@@ -52,7 +52,7 @@ const PrintDialog = ({
               ref={cancelRef}>
               Cancel
             </Button>
-            <Button onPress={print}>Start printing</Button>
+            <Button onPress={() => print(distance)}>Start printing</Button>
           </Button.Group>
         </AlertDialog.Footer>
       </AlertDialog.Content>

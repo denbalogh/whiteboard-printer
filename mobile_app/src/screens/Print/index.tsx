@@ -21,8 +21,6 @@ const PrintScreen = ({
 }: NativeStackScreenProps<RootStackParamList, 'Print'>) => {
   const {isConnected} = useBluetoothContext();
 
-  const [rows, setRows] = useState(10);
-  const [cols, setCols] = useState(10);
   const [isSaveToCollectionDialogOpen, setIsSaveToCollectionDialogOpen] =
     useState(false);
   const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
@@ -46,6 +44,8 @@ const PrintScreen = ({
     setIsPrintDialogOpen(false);
   };
 
+  const [rows, setRows] = useState(10);
+  const [cols, setCols] = useState(10);
   const [boardState, setBoardState] = useState(
     [...Array(rows * cols).keys()].map(() => false),
   );
@@ -101,8 +101,22 @@ const PrintScreen = ({
     setBoardState(item.boardState);
   };
 
-  const handlePrint = () => {
-    console.log('PRINTING');
+  const getPrintCommand = (spacing: string) => {
+    let command = `PRINT:${spacing}:`;
+
+    boardState.forEach((isFilled, index) => {
+      if (index % cols === 0 && index !== 0) {
+        command += ';';
+      }
+      command += isFilled ? 't' : 'f';
+    });
+
+    return command;
+  };
+
+  const handlePrint = (spacing: string) => {
+    const command = getPrintCommand(spacing);
+    console.warn(command);
     handlePrintDialogClose();
   };
 
