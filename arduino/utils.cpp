@@ -50,3 +50,15 @@ bool isImageCodeValid(String code){
 
   return true;
 }
+
+int getSemicolonsCount(String code){
+  int semicolons = 0;
+  
+  for(int i = 0; i < code.length(); i++){
+    if(code.charAt(i) == ';'){
+      semicolons++;
+    }
+  }
+
+  return semicolons;
+}

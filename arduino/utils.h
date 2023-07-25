@@ -5,5 +5,6 @@
 
 float calculateAngularDistance(float targetAngle, float currentAngle, bool *clockwise);
 bool isImageCodeValid(String code);
+int getSemicolonsCount(String code);
 
 #endif

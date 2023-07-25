@@ -170,7 +170,7 @@ void Controller::printPoint(void){
     delay(500);
 }
 
-void Controller::printSquare(int size, int spacing){
+void Controller::printImage(int spacing, String image){
     lift->up();
     delay(500);
 
@@ -181,61 +181,40 @@ void Controller::printSquare(int size, int spacing){
     float moveTimes[3] = {0.0};
     setMoveTimes(moveTimes, spacing);
 
-    int rows = size;
-    int cols = size;
+    int imageLength = image.length();
+    int totalPoints = imageLength - getSemicolonsCount(image);
+    int row = 1;
 
-    for(int i = 1; i <= rows; i++){
-        bool forward = i % 2 != 0;
-
-        for(int j = 0; j < cols - 1; j++){
-            if(bt->hasReceivedData()){
-                wheels->stop();
-                break;
-            }
-
-            controlRotation(angleRight, true);
-            printPoint();
-            moveForTimeInMs(forward, moveTimes[0]);
+    for(int i = 0; i < imageLength; i++){
+        if(bt->hasReceivedData()){
+            wheels->stop();
+            break;
         }
 
-        controlRotation(angleRight, true);
-        printPoint();
-
-        // move to next row
-        if(i != rows){
+        if(image.charAt(i) == ';'){
             controlRotation(angleBottomRight, true);
             moveForTimeInMs(true, moveTimes[1]);
             controlRotation(angleRight, true);
             moveForTimeInMs(false, moveTimes[2]);
+            row++;
+            continue;
+        }
+
+        bool forward = row % 2 != 0;
+
+        controlRotation(angleRight, true);
+
+        if(image.charAt(i) == 't'){
+            printPoint();
+        }
+
+        bt->writeString("PRINT_STATUS:" + String(i + 1) + "/" + String(totalPoints));
+
+        if(i != imageLength - 1 && image.charAt(i + 1) != ';'){
+            moveForTimeInMs(forward, moveTimes[0]);
         }
     }
 }
-
-// void Controller::printSquare(int size){
-//     lift->up();
-//     delay(500);
-
-//     int angleRight = 82; // should be 90 but accelerometer sensor is giving 82
-//     int angleBottomRight = 90 + ANGLE_WHEN_MOVING_TO_NEXT_ROW;
-//     float moveTimeInAngle = ((PIXEL_DISTANCE_IN_CM - 0.63) / 0.77) * ONE_CM_IN_MS;
-//     float moveBackFromAngleTime = 1.15 * moveTimeInAngle + 0.31;
-
-//     for(int i = 1; i <= size; i++){
-//         if(bt->hasReceivedData()){
-//             wheels->stop();
-//             break;
-//         }
-//         controlRotation(angleRight, true);
-//         printPoint();
-//         controlRotation(angleBottomRight, true);
-//         moveForTimeInMs(true, moveTime);
-//         controlRotation(angleRight, true);
-//         moveForTimeInMs(false, moveBackTime);
-//     }
-
-//     controlRotation(angleRight, true);
-//     printPoint();
-// }
 
 void Controller::parseCommand(String command) {
     command = command.substring(0, command.length() - 1); // remove the \n character
@@ -272,25 +251,19 @@ void Controller::parseCommand(String command) {
         }
     }
 
-    if(commandName == "IS_IMAGE_VALID"){
-        bool isValid = isImageCodeValid(commandValue);
-        if(isValid){
-            bt->writeString("IMAGE_VALID");
-        } else {
-            bt->writeString("IMAGE_INVALID");
-        }
-        delay(1000);
-    }
-
     if(commandName == "PRINT"){
         // Commands with values in format COMMAND:VALUE
         int sepIndex = commandValue.indexOf(':');
         if(sepIndex == -1)
             return;
 
-        String size = commandValue.substring(0, sepIndex);
-        String spacing = commandValue.substring(sepIndex + 1);
+        String spacing = commandValue.substring(0, sepIndex);
+        String image = commandValue.substring(sepIndex + 1);
+
+        bool isImageValid = isImageCodeValid(image);
         
-        printSquare(size.toInt(), spacing.toInt());
+        if(isImageValid){
+            printImage(spacing.toInt(), image);
+        }
     }
 }

@@ -37,7 +37,7 @@ class Controller {
         void controlMovement(float angle, bool forward);
         void moveForTimeInMs(bool forward, int timeInMs);
         void printPoint(void);
-        void printSquare(int size, int spacing);
+        void printImage(int spacing, String image);
 };
 
 #endif
